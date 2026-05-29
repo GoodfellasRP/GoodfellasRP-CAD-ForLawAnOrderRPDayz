@@ -448,7 +448,7 @@
         // Network Sync Handlers
         async function fetchStateFromServer() {
             try {
-                const response = await fetch('/api/state');
+                const response = await fetch('api.php');
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -472,7 +472,7 @@
 
         async function pushStateToServer() {
             try {
-                await fetch('/api/state', {
+                await fetch('api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
