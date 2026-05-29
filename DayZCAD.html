@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chernarus Tactical CAD Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar and input focus adjustments for mobile optimization */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #065f46;
+            border-radius: 2px;
+        }
+        input, select, textarea {
+            font-size: 16px !important; /* Prevents mobile browser auto-zoom on focus */
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-emerald-400 min-h-screen font-mono flex flex-col selection:bg-emerald-600 selection:text-white">
+
+    <div id="login-screen" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-slate-900 border-2 border-emerald-500 p-5 md:p-8 rounded-lg shadow-2xl w-full max-w-md my-auto">
+            
+            <div class="text-center mb-5">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-500 tracking-widest">CHERNARUS <span class="text-emerald-400">MDT</span></h1>
+                <p class="text-[10px] text-slate-400 mt-1">Mobile Optimized Terminal // Secure Node</p>
+                <div id="auth-msg" class="hidden mt-3 p-2 text-xs border rounded bg-red-950/50 border-red-800 text-red-400"></div>
+            </div>
+
+            <div id="view-login" class="space-y-3">
+                <h2 class="text-xs uppercase font-bold tracking-wider text-blue-400 border-b border-slate-800 pb-1">Terminal Sign-In</h2>
+                <form id="login-form" class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Username</label>
+                        <input type="text" id="login-username" required class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                        <input type="password" id="login-password" required class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 border border-emerald-400 text-white font-bold py-2.5 px-4 rounded text-sm transition tracking-widest uppercase mt-2 cursor-pointer">
+                        Access Core
+                    </button>
+                </form>
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-500">No terminal access key? <button type="button" onclick="toggleAuthViews('register')" class="text-emerald-400 underline font-bold focus:outline-none cursor-pointer">Create Profile</button></p>
+                </div>
+            </div>
+
+            <div id="view-register" class="space-y-3 hidden" style="display: none;">
+                <h2 class="text-xs uppercase font-bold tracking-wider text-emerald-400 border-b border-slate-800 pb-1">Register Security Profile</h2>
+                <form id="register-form" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Account User</label>
+                            <input type="text" id="reg-username" required placeholder="Unique Login ID" class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                            <input type="password" id="reg-password" required placeholder="Security Key" class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Character Name / Callsign</label>
+                        <input type="text" id="reg-charname" placeholder="e.g., Off. Cold / Dr. Jones" required class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Department Role</label>
+                        <select id="reg-role" class="w-full bg-slate-950 border border-emerald-800 text-emerald-300 rounded p-2 text-base focus:outline-none focus:border-blue-500">
+                            <option value="Police Officer">Police Officer</option>
+                            <option value="Dispatch / EMS Control">Dispatch / EMS Control</option>
+                            <option value="Department of Justice / Magistrate">Department of Justice / Magistrate</option>
+                            <option value="Medical Staff / Responder">Medical Staff / Responder</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-700 border border-blue-500 text-white font-bold py-2.5 px-4 rounded text-sm transition tracking-widest uppercase mt-2 cursor-pointer">
+                        Initialize Profile
+                    </button>
+                </form>
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-500">Already registered? <button type="button" onclick="toggleAuthViews('login')" class="text-blue-400 underline font-bold focus:outline-none cursor-pointer">Return to Login</button></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden flex flex-col h-screen overflow-hidden">
+        
+        <header class="bg-slate-900 border-b border-emerald-900/60 px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2 shrink-0">
+            <div class="flex items-center space-x-2 text-center sm:text-left">
+                <div class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse hidden sm:block"></div>
+                <div>
+                    <span class="text-sm font-bold tracking-wider text-blue-400">MDT//MOBILE//SYS</span>
+                    <span class="text-[10px] text-emerald-600 block sm:inline sm:ml-2" id="live-clock"></span>
+                </div>
+            </div>
+            <div class="flex items-center justify-between w-full sm:w-auto space-x-3 bg-slate-950 border border-emerald-900 px-3 py-1 rounded">
+                <div class="text-left">
+                    <p class="text-xs text-emerald-300 font-bold" id="user-display-name">Officer</p>
+                    <p class="text-[9px] text-blue-400 uppercase tracking-widest truncate max-w-[180px]" id="user-display-role">Role</p>
+                </div>
+                <button onclick="logout()" class="text-[10px] bg-red-950 hover:bg-red-900 text-red-400 border border-red-800 px-2 py-0.5 rounded transition cursor-pointer">
+                    Exit
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+            
+            <aside class="bg-slate-900 border-b md:border-b-0 md:border-r border-emerald-900/60 p-2 md:p-4 flex flex-row md:flex-col justify-between shrink-0 overflow-x-auto md:overflow-x-visible md:w-64 gap-1">
+                <nav class="flex flex-row md:flex-col w-full gap-1 shrink-0">
+                    <button onclick="switchTab('police-tab', event)" class="tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition bg-emerald-950/60 text-emerald-400 border-b-2 md:border-b-0 md:border-l-2 border-emerald-400">
+                        <span>🛡️</span> <span class="hidden sm:inline md:block">Police Dept</span>
+                    </button>
+                    <button onclick="switchTab('dmv-tab', event)" class="tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition text-slate-400 hover:bg-slate-800/40">
+                        <span>🚗</span> <span class="hidden sm:inline md:block">DMV System</span>
+                    </button>
+                    <button onclick="switchTab('doj-tab', event)" class="tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition text-slate-400 hover:bg-slate-800/40">
+                        <span>⚖️</span> <span class="hidden sm:inline md:block">Justice Dept</span>
+                    </button>
+                    <button onclick="switchTab('ems-tab', event)" class="tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition text-slate-400 hover:bg-slate-800/40">
+                        <span>🚑</span> <span class="hidden sm:inline md:block">EMS Control</span>
+                    </button>
+                </nav>
+                <div class="hidden md:block p-2 bg-slate-950 border border-emerald-950 rounded text-[10px] text-emerald-700 space-y-0.5">
+                    <p>📡 Link: Active</p>
+                    <p>🌐 Mode: Server Sync</p>
+                </div>
+            </aside>
+
+            <main class="flex-1 bg-slate-950 overflow-y-auto p-3 sm:p-5">
+                
+                <section id="police-tab" class="tab-content space-y-5">
+                    <div class="border-b border-emerald-900/60 pb-2">
+                        <h2 class="text-base font-bold tracking-wide text-blue-400 uppercase">Police Records Administration</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-4 space-y-4">
+                            <div class="bg-slate-900 border border-emerald-950 rounded p-3">
+                                <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">Register Officer Profile</h3>
+                                <form id="form-officer" class="space-y-2 text-xs">
+                                    <div>
+                                        <input type="text" id="off-name" required placeholder="Badge # & Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select id="off-rank" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                            <option value="Cadet">Cadet</option>
+                                            <option value="Deputy/Officer">Officer</option>
+                                            <option value="Sergeant">Sergeant</option>
+                                            <option value="Chief / Sheriff">Command</option>
+                                        </select>
+                                        <select id="off-loc" class="location-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                    </div>
+                                    <button type="submit" class="w-full bg-blue-950/40 hover:bg-blue-900/60 text-blue-400 border border-blue-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Submit Profile</button>
+                                </form>
+                            </div>
+
+                            <div class="bg-slate-900 border border-emerald-950 rounded p-3">
+                                <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">File Incident / Arrest</h3>
+                                <form id="form-incident" class="space-y-2 text-xs">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select id="inc-type" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                            <option value="Arrest Report">Arrest File</option>
+                                            <option value="Crime Report">Unsolved Crime</option>
+                                        </select>
+                                        <select id="inc-loc" class="location-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="inc-suspect" required placeholder="Citizen / Suspect Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <select id="inc-crime" class="crime-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                    </div>
+                                    <div>
+                                        <textarea id="inc-details" rows="2" required placeholder="Narrative, evidence log..." class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none focus:border-blue-500 text-xs font-sans"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Commit File Entry</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-8 space-y-4">
+                            <div class="bg-slate-900 border border-emerald-950 rounded p-3">
+                                <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Active Roster Database</h3>
+                                <div class="overflow-x-auto border border-slate-950 rounded">
+                                    <table class="w-full text-left text-[11px] border-collapse min-w-[340px]">
+                                        <thead>
+                                            <tr class="bg-slate-950 border-b border-emerald-900/40 text-blue-400 font-bold">
+                                                <th class="p-2">Officer Call Identification</th>
+                                                <th class="p-2">Rank Class</th>
+                                                <th class="p-2">Precinct Command</th>
+                                                <th class="p-2 text-center w-14 text-slate-500">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-officers" class="divide-y divide-slate-800 text-emerald-300">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900 border border-emerald-950 rounded p-3">
+                                <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Master Criminal Logs & Index Records</h3>
+                                <div class="space-y-2 max-h-[350px] overflow-y-auto pr-1" id="log-incidents">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="dmv-tab" class="tab-content space-y-5 hidden">
+                    <div class="border-b border-emerald-900/60 pb-2">
+                        <h2 class="text-base font-bold tracking-wide text-blue-400 uppercase">Department of Motor Vehicles Registry</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-4 bg-slate-900 border border-emerald-950 rounded p-3 h-fit">
+                            <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">Register Chassis ID</h3>
+                            <form id="form-dmv" class="space-y-2 text-xs">
+                                <div>
+                                    <input type="text" id="dmv-owner" required placeholder="Owner Full Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="dmv-lic" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                        <option value="Valid">License: Valid</option>
+                                        <option value="Suspended">Suspended</option>
+                                        <option value="Revoked">Revoked</option>
+                                        <option value="Unlicensed / None">Unlicensed</option>
+                                    </select>
+                                    <select id="dmv-loc" class="location-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="dmv-veh" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                        <option value="Ada 4x4">Ada 4x4</option>
+                                        <option value="Olga 24">Olga 24</option>
+                                        <option value="Gunter 2">Gunter 2</option>
+                                        <option value="Sarka 120">Sarka 120</option>
+                                        <option value="M3S Truck">M3S Truck</option>
+                                        <option value="Humvee">Humvee</option>
+                                        <option value="Improviser Raft / Motorcycle">Motorcycle</option>
+                                    </select>
+                                    <input type="text" id="dmv-plate" required placeholder="Plate ID" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Commit File</button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-8 bg-slate-900 border border-emerald-950 rounded p-3">
+                            <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Chassis Registry & Licensing Index Ledger</h3>
+                            <div class="overflow-x-auto border border-slate-950 rounded">
+                                <table class="w-full text-left text-[11px] border-collapse min-w-[500px]">
+                                    <thead>
+                                        <tr class="bg-slate-950 border-b border-emerald-900/40 text-blue-400 font-bold">
+                                            <th class="p-2">Owner Name</th>
+                                            <th class="p-2">Permit State</th>
+                                            <th class="p-2">Chassis Spec</th>
+                                            <th class="p-2">Plate Index</th>
+                                            <th class="p-2">District</th>
+                                            <th class="p-2 text-center w-14 text-slate-500">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-dmv" class="divide-y divide-slate-800 text-emerald-300">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="doj-tab" class="tab-content space-y-6 hidden">
+                    <div class="border-b border-emerald-900/60 pb-2">
+                        <h2 class="text-base font-bold tracking-wide text-blue-400 uppercase">Department of Justice Administration</h2>
+                    </div>
+
+                    <!-- Warrants Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 border-b border-emerald-950 pb-6">
+                        <div class="lg:col-span-4 bg-slate-900 border border-emerald-950 rounded p-3 h-fit">
+                            <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">File Legal Docket Request</h3>
+                            <form id="form-warrant" class="space-y-2 text-xs">
+                                <div>
+                                    <input type="text" id="war-target" required placeholder="Suspect Full Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="war-type" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                        <option value="Arrest Warrant">Arrest Warrant</option>
+                                        <option value="Search Warrant">Search & Seizure</option>
+                                        <option value="Execution Order">Neutralization Order</option>
+                                    </select>
+                                    <select id="war-loc" class="location-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                </div>
+                                <div>
+                                    <select id="war-crime" class="crime-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                </div>
+                                <div>
+                                    <textarea id="war-details" rows="2" required placeholder="Affidavit narrative, probable cause justification..." class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none text-xs font-sans"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Dispatch Docket</button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-8 bg-slate-900 border border-emerald-950 rounded p-3">
+                            <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Active Legal Process & Magistrate Action Center</h3>
+                            <div class="space-y-3 max-h-[250px] overflow-y-auto pr-1" id="log-warrants"></div>
+                        </div>
+                    </div>
+
+                    <!-- Probation Logs Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 border-b border-emerald-950 pb-6">
+                        <div class="lg:col-span-4 bg-slate-900 border border-emerald-950 rounded p-3 h-fit">
+                            <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">Create Probation Directive</h3>
+                            <form id="form-probation" class="space-y-2 text-xs">
+                                <div>
+                                    <input type="text" id="prob-name" required placeholder="Probationer Full Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="prob-officer" required placeholder="Assigned Supervisor" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                    <input type="text" id="prob-duration" required placeholder="Duration (e.g., 14 Days)" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div>
+                                    <textarea id="prob-terms" rows="2" required placeholder="Mandatory conditions, restricted checkpoints, check-in schedules..." class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none text-xs font-sans"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Commit Probation Entry</button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-8 bg-slate-900 border border-emerald-950 rounded p-3">
+                            <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Supervised Release & Parole Registry</h3>
+                            <div class="space-y-3 max-h-[250px] overflow-y-auto pr-1" id="log-probation"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bail Logs Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-4 bg-slate-900 border border-emerald-950 rounded p-3 h-fit">
+                            <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">Establish Bail Framework</h3>
+                            <form id="form-bail" class="space-y-2 text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="bail-name" required placeholder="Defendant Name" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                    <input type="text" id="bail-amount" required placeholder="Bail Value (e.g., 50k Rubles)" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="bail-status" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                        <option value="Awaiting Payment">Awaiting Payment</option>
+                                        <option value="Bail Posted / Active">Bail Posted / Active</option>
+                                        <option value="Forfeited / Absconded">Forfeited / Absconded</option>
+                                        <option value="Exonerated / Closed">Exonerated / Closed</option>
+                                    </select>
+                                    <input type="text" id="bail-authority" required placeholder="Authorizing Magistrate" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                </div>
+                                <div>
+                                    <textarea id="bail-notes" rows="2" placeholder="Special restrictions (e.g., Confiscated Passport, Weapon Restrictions)..." class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none text-xs font-sans"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Post Bail Config</button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-8 bg-slate-900 border border-emerald-950 rounded p-3">
+                            <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Tribunal Bail & Bond Transactions</h3>
+                            <div class="space-y-3 max-h-[250px] overflow-y-auto pr-1" id="log-bail"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="ems-tab" class="tab-content space-y-5 hidden">
+                    <div class="border-b border-emerald-900/60 pb-2">
+                        <h2 class="text-base font-bold tracking-wide text-blue-400 uppercase">Emergency Medical Services Grid</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-4 bg-slate-900 border border-emerald-950 rounded p-3 h-fit">
+                            <h3 class="text-xs font-bold uppercase text-blue-400 mb-2 border-b border-slate-800 pb-1">Deploy Field Responder</h3>
+                            <form id="form-ems" class="space-y-2 text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="ems-patient" required placeholder="Patient Alias" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                    <select id="ems-loc" class="location-dropdown w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none"></select>
+                                </div>
+                                <div>
+                                    <select id="ems-condition" class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none">
+                                        <option value="Severe Uncontrolled Bleeding / Fractures">Bleeding / Fractures</option>
+                                        <option value="Unconscious / Unknown Trauma Type">Unconscious / Unresponsive</option>
+                                        <option value="Incurred Chemical Gas Inhalation (POX)">Gas Contamination (POX)</option>
+                                        <option value="Sickness / Kuru Tremors / Bacterial">Sickness / Tremors / Kuru</option>
+                                        <option value="Starvation & Extreme Dehydration">Starvation & Dehydration</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <textarea id="ems-notes" rows="2" placeholder="Tactical updates, hostile counts, vector details..." class="w-full bg-slate-950 border border-emerald-900 rounded p-1.5 text-emerald-300 focus:outline-none text-xs font-sans"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 py-1 rounded font-bold transition text-[11px] uppercase cursor-pointer">Broadcast Unit Alert</button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-8 bg-slate-900 border border-emerald-950 rounded p-3">
+                            <h3 class="text-xs font-bold uppercase text-emerald-500 mb-2 tracking-wider">Active Medical Routing Dashboard</h3>
+                            <div class="space-y-3 max-h-[450px] overflow-y-auto pr-1" id="log-ems">
+                                </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Data assets matching the DayZ Universe
+        const dayzTowns = [
+            "Berezino", "Balota", "Chernogorsk", "Elektrozavodsk", "Gorka", "Kamenka", "Kamyshovo", 
+            "Krasnostav", "Mishkino", "Mogilevka", "Nadezhdino", "Novodmitrovsk", "Novaya Petrovka", 
+            "Novy Sobor", "Pavlovo", "Prigorodki", "Pushko", "Severograd", "Solnichniy", "Stary Sobor", 
+            "Svetlojarsk", "Topolin", "Vybor", "Zelenogorsk"
+        ].sort();
+
+        const dayzCrimes = [
+            "Unsanctioned Human Cannibalism",
+            "Illegal Firearm Concealment / Unregistered Weapon",
+            "Grand Theft Auto (Ada/Olga Chassis Theft)",
+            "Base Trespass into Prohibited Military Compound",
+            "Assault with a Lethal Melee Implement",
+            "Premeditated Murder / KOS (Kill On Sight)",
+            "Larceny of Base Supplies and Rations",
+            "Unlawful Trapping & Wildlife Poaching",
+            "Resisting Detention by Fleeing to the Wilderness",
+            "Possession of Forbidden Pathology Assets (Human Fat)"
+        ];
+
+        // Central System Memory Context
+        let systemState = {
+            sessionUser: null,
+            users: [],
+            officers: [],
+            incidents: [],
+            dmv: [],
+            warrants: [],
+            ems: [],
+            probation: [],
+            bail: []
+        };
+
+        // Network Sync Handlers
+        async function fetchStateFromServer() {
+            try {
+                const response = await fetch('/api/state');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update state from global server configurations
+                    systemState.users = data.users || [];
+                    systemState.officers = data.officers || [];
+                    systemState.incidents = data.incidents || [];
+                    systemState.dmv = data.dmv || [];
+                    systemState.warrants = data.warrants || [];
+                    systemState.ems = data.ems || [];
+                    systemState.probation = data.probation || [];
+                    systemState.bail = data.bail || [];
+                    
+                    renderAllModules();
+                    checkCurrentSession();
+                }
+            } catch (e) {
+                console.error("System network synchronization interruption:", e);
+            }
+        }
+
+        async function pushStateToServer() {
+            try {
+                await fetch('/api/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        users: systemState.users,
+                        officers: systemState.officers,
+                        incidents: systemState.incidents,
+                        dmv: systemState.dmv,
+                        warrants: systemState.warrants,
+                        ems: systemState.ems,
+                        probation: systemState.probation,
+                        bail: systemState.bail
+                    })
+                });
+            } catch (e) {
+                console.error("Failed to commit terminal state to server context:", e);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            populateSelectOptions();
+            
+            // Initial payload pull down from server nodes
+            await fetchStateFromServer();
+            
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('live-clock').innerText = now.toISOString().replace('T', ' ').substring(0, 19) + " ZULU";
+            }, 1000);
+
+            // Network synchronization loop to grab multi-device updates dynamically every 5 seconds
+            setInterval(fetchStateFromServer, 5000);
+        });
+
+        function populateSelectOptions() {
+            document.querySelectorAll('.location-dropdown').forEach(dropdown => {
+                dropdown.innerHTML = "";
+                dayzTowns.forEach(town => {
+                    let opt = document.createElement('option');
+                    opt.value = town; opt.textContent = town;
+                    dropdown.appendChild(opt);
+                });
+            });
+
+            document.querySelectorAll('.crime-dropdown').forEach(dropdown => {
+                dropdown.innerHTML = "";
+                dayzCrimes.forEach(crime => {
+                    let opt = document.createElement('option');
+                    opt.value = crime; opt.textContent = crime;
+                    dropdown.appendChild(opt);
+                });
+            });
+        }
+
+        function toggleAuthViews(targetView) {
+            const loginView = document.getElementById('view-login');
+            const registerView = document.getElementById('view-register');
+            const msgBox = document.getElementById('auth-msg');
+            
+            msgBox.classList.add('hidden');
+            msgBox.style.display = 'none';
+            msgBox.innerText = "";
+
+            if (targetView === 'register') {
+                loginView.classList.add('hidden');
+                loginView.style.display = 'none';
+                
+                registerView.classList.remove('hidden');
+                registerView.style.display = 'block';
+            } else {
+                registerView.classList.add('hidden');
+                registerView.style.display = 'none';
+                
+                loginView.classList.remove('hidden');
+                loginView.style.display = 'block';
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgBox = document.getElementById('auth-msg');
+            const userVal = document.getElementById('reg-username').value.trim();
+            const passVal = document.getElementById('reg-password').value;
+            const charVal = document.getElementById('reg-charname').value.trim();
+            const roleVal = document.getElementById('reg-role').value;
+
+            const userExists = systemState.users.some(u => u.username.toLowerCase() === userVal.toLowerCase());
+            if (userExists) {
+                msgBox.innerText = "REGISTRATION ERROR: Username already exists.";
+                msgBox.classList.remove('hidden');
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            const newAccount = { username: userVal, password: passVal, charName: charVal, role: roleVal };
+            systemState.users.push(newAccount);
+            
+            // Sync up user modifications
+            await pushStateToServer();
+
+            systemState.sessionUser = { username: userVal, charName: charVal, role: roleVal };
+            try {
+                sessionStorage.setItem("m_cad_active_user", JSON.stringify(systemState.sessionUser));
+            } catch(err) {}
+            
+            document.getElementById('register-form').reset();
+            checkCurrentSession();
+        });
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const msgBox = document.getElementById('auth-msg');
+            const userVal = document.getElementById('login-username').value.trim();
+            const passVal = document.getElementById('login-password').value;
+
+            const exactProfile = systemState.users.find(u => u.username.toLowerCase() === userVal.toLowerCase() && u.password === passVal);
+            
+            if (exactProfile) {
+                systemState.sessionUser = { username: exactProfile.username, charName: exactProfile.charName, role: exactProfile.role };
+                try {
+                    sessionStorage.setItem("m_cad_active_user", JSON.stringify(systemState.sessionUser));
+                } catch(err) {}
+                document.getElementById('login-form').reset();
+                checkCurrentSession();
+            } else {
+                msgBox.innerText = "ACCESS DENIED: Invalid Terminal Credentials.";
+                msgBox.classList.remove('hidden');
+                msgBox.style.display = 'block';
+            }
+        });
+
+        function checkCurrentSession() {
+            let savedUser = null;
+            try {
+                savedUser = sessionStorage.getItem("m_cad_active_user");
+            } catch(e) {}
+
+            if (savedUser) {
+                systemState.sessionUser = JSON.parse(savedUser);
+            }
+
+            if (systemState.sessionUser) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('user-display-name').innerText = systemState.sessionUser.charName;
+                document.getElementById('user-display-role').innerText = `${systemState.sessionUser.username} // ${systemState.sessionUser.role}`;
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('main-app').classList.add('hidden');
+                toggleAuthViews('login');
+            }
+        }
+
+        function logout() {
+            try {
+                sessionStorage.removeItem("m_cad_active_user");
+            } catch(e) {}
+            systemState.sessionUser = null;
+            checkCurrentSession();
+        }
+
+        function switchTab(targetId, event) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(targetId).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition text-slate-400 hover:bg-slate-800/40";
+            });
+
+            let activeColorClass = "border-emerald-400 bg-emerald-950/60 text-emerald-400 border-b-2 md:border-b-0 md:border-l-2";
+            if (event && event.currentTarget) {
+                event.currentTarget.className = `tab-btn shrink-0 flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 text-left px-3 py-2 rounded text-xs font-bold transition ${activeColorClass}`;
+            }
+        }
+
+        // UI RENDERING ENGINES
+        function renderAllModules() {
+            renderOfficers();
+            renderIncidents();
+            renderDMV();
+            renderWarrants();
+            renderEMS();
+            renderProbation();
+            renderBail();
+        }
+
+        function renderOfficers() {
+            document.getElementById('table-officers').innerHTML = systemState.officers.map((off, idx) => `
+                <tr class="hover:bg-slate-900 transition">
+                    <td class="p-2 font-bold text-slate-200">${off.name}</td>
+                    <td class="p-2 text-blue-400 font-bold">${off.rank}</td>
+                    <td class="p-2 text-slate-400">${off.location}</td>
+                    <td class="p-2 text-center">
+                        <button onclick="deleteOfficer(${idx})" class="text-red-500 hover:text-red-400 font-bold text-sm focus:outline-none cursor-pointer transition" title="Delete Entry">&times;</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderIncidents() {
+            const container = document.getElementById('log-incidents');
+            if (systemState.incidents.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">No admin files inside index.</p>`;
+                return;
+            }
+            container.innerHTML = systemState.incidents.slice().reverse().map(inc => `
+                <div class="p-2.5 rounded border border-emerald-950 bg-slate-950 text-xs space-y-1 relative pr-7">
+                    <button onclick="deleteIncident(${inc.id})" class="absolute top-2 right-2.5 text-red-500 hover:text-red-400 font-bold text-base focus:outline-none cursor-pointer transition" title="Delete Entry">&times;</button>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-bold px-1 py-0.5 rounded ${inc.type === 'Arrest Report' ? 'bg-blue-950/70 text-blue-400 border border-blue-900' : 'bg-slate-900 text-slate-400 border border-slate-800'}">${inc.type}</span>
+                        <span class="text-slate-500">Loc: ${inc.location}</span>
+                    </div>
+                    <p class="text-slate-300"><span class="text-slate-500 font-bold">SUBJECT:</span> ${inc.suspect}</p>
+                    <p class="text-emerald-300 font-bold"><span class="text-slate-500 font-normal">VIOLATION:</span> ${inc.crime}</p>
+                    <p class="text-slate-400 font-sans text-[11px] bg-slate-900 p-2 rounded border border-slate-800/50">${inc.details}</p>
+                    <p class="text-[9px] text-slate-600 text-right italic pt-0.5">Node: ${inc.reportingUser || 'Unknown'}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderDMV() {
+            document.getElementById('table-dmv').innerHTML = systemState.dmv.map((item, idx) => {
+                let statusStyle = item.license === "Valid" ? "text-emerald-400 bg-emerald-950/40 border-emerald-800" : "text-red-400 bg-red-950/40 border-red-900";
+                return `
+                    <tr class="hover:bg-slate-900 transition text-[11px]">
+                        <td class="p-2 font-bold text-slate-200">${item.owner}</td>
+                        <td class="p-2"><span class="px-1.5 py-0.5 border text-[9px] font-bold rounded ${statusStyle}">${item.license}</span></td>
+                        <td class="p-2 text-slate-400">${item.vehicle}</td>
+                        <td class="p-2 tracking-wider text-blue-400 font-bold">${item.plate}</td>
+                        <td class="p-2 text-slate-500">${item.location}</td>
+                        <td class="p-2 text-center">
+                            <button onclick="deleteDMV(${idx})" class="text-red-500 hover:text-red-400 font-bold text-sm focus:outline-none cursor-pointer transition" title="Delete Entry">&times;</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderWarrants() {
+            const container = document.getElementById('log-warrants');
+            if (systemState.warrants.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">Warrant queue empty.</p>`;
+                return;
+            }
+            container.innerHTML = systemState.warrants.slice().reverse().map(war => {
+                let statusStyle = "border-slate-800 text-slate-400";
+                if (war.status === "Approved") statusStyle = "border-red-900 bg-red-950/30 text-red-400";
+                if (war.status === "Denied") statusStyle = "border-slate-800 line-through text-slate-600";
+
+                return `
+                    <div class="p-3 rounded border border-emerald-950 bg-slate-950 text-xs space-y-2 relative pr-7">
+                        <button onclick="deleteWarrant(${war.id})" class="absolute top-2 right-2.5 text-red-500 hover:text-red-400 font-bold text-base focus:outline-none cursor-pointer transition" title="Delete Entry">&times;</button>
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5">
+                            <div>
+                                <span class="font-bold text-blue-400">[${war.type}]</span>
+                                <span class="text-slate-500 text-[10px] ml-1">Zone: ${war.location}</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5 justify-between sm:justify-end">
+                                <span class="text-[9px] uppercase tracking-wider font-bold border px-1.5 py-0.5 rounded ${statusStyle}">
+                                    ${war.status}
+                                </span>
+                                <select onchange="updateWarrantStatus(${war.id}, this.value)" class="bg-slate-900 border border-emerald-800 rounded text-[11px] p-1 text-emerald-300 focus:outline-none min-w-[110px]">
+                                    <option value="" disabled selected>Magistrate Action</option>
+                                    <option value="Approved">Approve</option>
+                                    <option value="Denied">Deny</option>
+                                    <option value="Pending">Pending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-[11px] border-t border-b border-slate-900 py-1 text-slate-400 space-y-0.5">
+                            <p><span class="text-slate-600 font-bold">TARGET:</span> <span class="text-slate-200 font-bold">${war.target}</span></p>
+                            <p><span class="text-slate-600 font-bold">AFFIDAVIT:</span> <span class="text-emerald-400">${war.crime}</span></p>
+                        </div>
+                        <p class="text-slate-400 font-sans bg-slate-900 p-2 rounded text-[11px] border border-slate-800/40">${war.details}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderProbation() {
+            const container = document.getElementById('log-probation');
+            if (!systemState.probation || systemState.probation.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">No active probations recorded.</p>`;
+                return;
+            }
+            container.innerHTML = systemState.probation.slice().reverse().map(prob => `
+                <div class="p-2.5 rounded border border-emerald-950 bg-slate-950 text-xs space-y-1 relative pr-7">
+                    <button onclick="deleteProbation(${prob.id})" class="absolute top-2 right-2.5 text-red-500 hover:text-red-400 font-bold text-base focus:outline-none cursor-pointer transition" title="Delete Directive">&times;</button>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-bold text-amber-400 tracking-wider">⚖️ PAROLE/PROBATION</span>
+                        <span class="text-slate-500">Term: ${prob.duration}</span>
+                    </div>
+                    <p class="text-slate-200"><span class="text-slate-500 font-bold">CITIZEN:</span> ${prob.name}</p>
+                    <p class="text-slate-300"><span class="text-slate-500 font-bold">SUPERVISOR:</span> ${prob.officer}</p>
+                    <p class="text-slate-400 font-sans text-[11px] bg-slate-900 p-2 rounded border border-slate-800/50 mt-1"><span class="text-emerald-500 font-mono font-bold block text-[10px] uppercase mb-0.5">Directives & Terms:</span>${prob.terms}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderBail() {
+            const container = document.getElementById('log-bail');
+            if (!systemState.bail || systemState.bail.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">No bail logs available inside repository.</p>`;
+                return;
+            }
+            container.innerHTML = systemState.bail.slice().reverse().map(b => {
+                let statusStyle = "border-slate-800 text-slate-400";
+                if (b.status === "Bail Posted / Active") statusStyle = "border-emerald-900 bg-emerald-950/30 text-emerald-400";
+                if (b.status === "Forfeited / Absconded") statusStyle = "border-red-900 bg-red-950/30 text-red-400";
+                if (b.status === "Exonerated / Closed") statusStyle = "border-blue-900 bg-blue-950/30 text-blue-400";
+
+                return `
+                    <div class="p-3 rounded border border-emerald-950 bg-slate-950 text-xs space-y-2 relative pr-7">
+                        <button onclick="deleteBail(${b.id})" class="absolute top-2 right-2.5 text-red-500 hover:text-red-400 font-bold text-base focus:outline-none cursor-pointer transition" title="Delete Ledger Entry">&times;</button>
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5">
+                            <div>
+                                <span class="font-bold text-amber-500">[BAIL VAL: ${b.amount}]</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5 justify-between sm:justify-end">
+                                <span class="text-[9px] uppercase tracking-wider font-bold border px-1.5 py-0.5 rounded ${statusStyle}">
+                                    ${b.status}
+                                </span>
+                                <select onchange="updateBailStatus(${b.id}, this.value)" class="bg-slate-900 border border-emerald-800 rounded text-[11px] p-1 text-emerald-300 focus:outline-none min-w-[110px]">
+                                    <option value="" disabled selected>Update Ledger</option>
+                                    <option value="Awaiting Payment">Awaiting Payment</option>
+                                    <option value="Bail Posted / Active">Post Bail</option>
+                                    <option value="Forfeited / Absconded">Forfeit</option>
+                                    <option value="Exonerated / Closed">Exonerate</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-[11px] border-t border-b border-slate-900 py-1 text-slate-400 space-y-0.5">
+                            <p><span class="text-slate-600 font-bold">DEFENDANT:</span> <span class="text-slate-200 font-bold">${b.name}</span></p>
+                            <p><span class="text-slate-600 font-bold">MAGISTRATE:</span> <span class="text-blue-400">${b.authority}</span></p>
+                        </div>
+                        ${b.notes ? `<p class="text-slate-400 font-sans bg-slate-900 p-2 rounded text-[11px] border border-slate-800/40">${b.notes}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderEMS() {
+            const container = document.getElementById('log-ems');
+            if (systemState.ems.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">No active dispatches.</p>`;
+                return;
+            }
+            container.innerHTML = systemState.ems.slice().reverse().map(item => `
+                <div class="p-2.5 rounded border border-emerald-950 bg-slate-950 text-xs flex gap-2 relative pr-7">
+                    <button onclick="deleteEMS(${item.id})" class="absolute top-2 right-2.5 text-red-500 hover:text-red-400 font-bold text-base focus:outline-none cursor-pointer transition" title="Delete Entry">&times;</button>
+                    <div class="flex items-center text-blue-400 bg-slate-900 px-2 rounded border border-emerald-950">🚑</div>
+                    <div class="flex-1 space-y-0.5">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-emerald-400 font-bold">VEC: ${item.location}</span>
+                            <span class="text-blue-400 font-bold tracking-wider animate-pulse">DISPATCHED</span>
+                        </div>
+                        <p class="text-slate-300"><span class="text-slate-500 font-bold">PATIENT:</span> ${item.patient}</p>
+                        <p class="text-slate-300"><span class="text-slate-500 font-bold">TRAUMA:</span> <span class="text-red-400 font-medium">${item.condition}</span></p>
+                        ${item.notes ? `<p class="text-slate-400 text-[11px] font-sans italic bg-slate-900 p-1.5 rounded border border-slate-800/60 mt-1">${item.notes}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // DATA MODULE ADDITIONS
+        document.getElementById('form-officer').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.officers.push({
+                name: document.getElementById('off-name').value.trim(),
+                rank: document.getElementById('off-rank').value,
+                location: document.getElementById('off-loc').value
+            });
+            await pushStateToServer(); 
+            renderOfficers();
+            document.getElementById('form-officer').reset();
+        });
+
+        document.getElementById('form-incident').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.incidents.push({
+                id: Date.now(),
+                type: document.getElementById('inc-type').value,
+                suspect: document.getElementById('inc-suspect').value.trim(),
+                crime: document.getElementById('inc-crime').value,
+                location: document.getElementById('inc-loc').value,
+                details: document.getElementById('inc-details').value.trim(),
+                reportingUser: systemState.sessionUser ? systemState.sessionUser.charName : "MDT Mobile"
+            });
+            await pushStateToServer(); 
+            renderIncidents();
+            document.getElementById('form-incident').reset();
+        });
+
+        document.getElementById('form-dmv').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.dmv.push({
+                owner: document.getElementById('dmv-owner').value.trim(),
+                license: document.getElementById('dmv-lic').value,
+                vehicle: document.getElementById('dmv-veh').value,
+                plate: document.getElementById('dmv-plate').value.trim(),
+                location: document.getElementById('dmv-loc').value
+            });
+            await pushStateToServer(); 
+            renderDMV();
+            document.getElementById('form-dmv').reset();
+        });
+
+        document.getElementById('form-warrant').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.warrants.push({
+                id: Date.now(),
+                target: document.getElementById('war-target').value.trim(),
+                type: document.getElementById('war-type').value,
+                crime: document.getElementById('war-crime').value,
+                location: document.getElementById('war-loc').value,
+                details: document.getElementById('war-details').value.trim(),
+                status: "Pending",
+                reportingUser: systemState.sessionUser ? systemState.sessionUser.charName : "Field Unit"
+            });
+            await pushStateToServer(); 
+            renderWarrants();
+            document.getElementById('form-warrant').reset();
+        });
+
+        document.getElementById('form-probation').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.probation.push({
+                id: Date.now(),
+                name: document.getElementById('prob-name').value.trim(),
+                officer: document.getElementById('prob-officer').value.trim(),
+                duration: document.getElementById('prob-duration').value.trim(),
+                terms: document.getElementById('prob-terms').value.trim()
+            });
+            await pushStateToServer();
+            renderProbation();
+            document.getElementById('form-probation').reset();
+        });
+
+        document.getElementById('form-bail').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.bail.push({
+                id: Date.now(),
+                name: document.getElementById('bail-name').value.trim(),
+                amount: document.getElementById('bail-amount').value.trim(),
+                status: document.getElementById('bail-status').value,
+                authority: document.getElementById('bail-authority').value.trim(),
+                notes: document.getElementById('bail-notes').value.trim()
+            });
+            await pushStateToServer();
+            renderBail();
+            document.getElementById('form-bail').reset();
+        });
+
+        document.getElementById('form-ems').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            systemState.ems.push({
+                id: Date.now(),
+                patient: document.getElementById('ems-patient').value.trim(),
+                condition: document.getElementById('ems-condition').value,
+                location: document.getElementById('ems-loc').value,
+                notes: document.getElementById('ems-notes').value.trim(),
+                reportingUser: systemState.sessionUser ? systemState.sessionUser.charName : "Mobile Node"
+            });
+            await pushStateToServer(); 
+            renderEMS();
+            document.getElementById('form-ems').reset();
+        });
+
+        async function updateWarrantStatus(warrantId, newStatus) {
+            if (!newStatus) return;
+            const idx = systemState.warrants.findIndex(w => w.id === warrantId);
+            if (idx !== -1) {
+                systemState.warrants[idx].status = newStatus;
+                await pushStateToServer(); 
+                renderWarrants();
+            }
+        }
+
+        async function updateBailStatus(bailId, newStatus) {
+            if (!newStatus) return;
+            const idx = systemState.bail.findIndex(b => b.id === bailId);
+            if (idx !== -1) {
+                systemState.bail[idx].status = newStatus;
+                await pushStateToServer();
+                renderBail();
+            }
+        }
+
+        // DELETION UTILITIES
+        async function deleteOfficer(index) {
+            systemState.officers.splice(index, 1);
+            await pushStateToServer();
+            renderOfficers();
+        }
+
+        async function deleteIncident(id) {
+            systemState.incidents = systemState.incidents.filter(inc => inc.id !== id);
+            await pushStateToServer();
+            renderIncidents();
+        }
+
+        async function deleteDMV(index) {
+            systemState.dmv.splice(index, 1);
+            await pushStateToServer();
+            renderDMV();
+        }
+
+        async function deleteWarrant(id) {
+            systemState.warrants = systemState.warrants.filter(war => war.id !== id);
+            await pushStateToServer();
+            renderWarrants();
+        }
+
+        async function deleteProbation(id) {
+            systemState.probation = systemState.probation.filter(prob => prob.id !== id);
+            await pushStateToServer();
+            renderProbation();
+        }
+
+        async function deleteBail(id) {
+            systemState.bail = systemState.bail.filter(b => b.id !== id);
+            await pushStateToServer();
+            renderBail();
+        }
+
+        async function deleteEMS(id) {
+            systemState.ems = systemState.ems.filter(item => item.id !== id);
+            await pushStateToServer();
+            renderEMS();
+        }
+    </script>
+</body>
+</html>
